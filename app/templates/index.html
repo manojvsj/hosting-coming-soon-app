@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coming Soon | YourBrand</title>
+  <link
+    rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}"
+  />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap"
+    rel="stylesheet"
+  />
+</head>
+<body>
+  <div class="container">
+    <div class="content">
+      <h1 class="title">
+        Something <span class="highlight">Amazing</span> is Coming
+      </h1>
+      <p class="subtitle">
+        We're working hard to bring you something extraordinary.
+        Stay tuned — big things are on the way!
+      </p>
+
+      <!-- Countdown Timer -->
+      <div class="countdown" id="countdown">
+        <div class="time-block">
+          <span id="days" class="time-value">00</span>
+          <span class="time-label">Days</span>
+        </div>
+        <div class="time-block">
+          <span id="hours" class="time-value">00</span>
+          <span class="time-label">Hours</span>
+        </div>
+        <div class="time-block">
+          <span id="minutes" class="time-value">00</span>
+          <span class="time-label">Minutes</span>
+        </div>
+        <div class="time-block">
+          <span id="seconds" class="time-value">00</span>
+          <span class="time-label">Seconds</span>
+        </div>
+      </div>
+
+      <!-- Email Notification Signup -->
+      <div class="notify-section">
+        <p class="notify-text">Get notified when we launch:</p>
+        <form class="notify-form" onsubmit="handleSubmit(event)">
+          <input
+            type="email"
+            id="email"
+            placeholder="Enter your email"
+            required
+          />
+          <button type="submit">Notify Me</button>
+        </form>
+        <p id="success-message" class="success-message" style="display:none;">
+          🎉 Thanks! We'll let you know when we launch.
+        </p>
+      </div>
+
+      <div class="social-links">
+        <a href="#" aria-label="Twitter">🐦</a>
+        <a href="#" aria-label="Instagram">📷</a>
+        <a href="#" aria-label="LinkedIn">💼</a>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>
