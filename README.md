@@ -2,6 +2,10 @@
 
 A **"Coming Soon"** landing page built with **Python + Flask**, containerized with **Docker**, deployed on **Google Cloud Run**, with a custom domain from **GoDaddy**.
 
+## Preview
+
+![Coming Soon Landing Page](docs/screenshot.png)
+
 ---
 
 ## Table of Contents
