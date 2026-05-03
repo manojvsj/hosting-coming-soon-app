@@ -6,6 +6,17 @@
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "${SCRIPT_DIR}/.env"
 
+# Step 1: Check domain is verified
+echo "==> Checking if ${DOMAIN} is verified..."
+if ! gcloud domains list-user-verified --project ${PROJECT_ID} 2>/dev/null | grep -q "${DOMAIN}"; then
+  echo "ERROR: ${DOMAIN} is not verified. Run this first:"
+  echo "  gcloud domains verify ${DOMAIN}"
+  return 2>/dev/null || true
+fi
+echo "==> ✓ ${DOMAIN} is verified"
+echo ""
+
+# Step 2: Create domain mappings
 echo "==> Mapping ${DOMAIN} to ${SERVICE}"
 if ! gcloud beta run domain-mappings create \
   --service ${SERVICE} \
@@ -14,7 +25,7 @@ if ! gcloud beta run domain-mappings create \
   --project ${PROJECT_ID} \
   --quiet; then
   echo "ERROR: Failed to map ${DOMAIN}. Check the error above."
-  exit 1
+  return 2>/dev/null || true
 fi
 
 echo "==> Mapping www.${DOMAIN} to ${SERVICE}"
@@ -25,7 +36,7 @@ if ! gcloud beta run domain-mappings create \
   --project ${PROJECT_ID} \
   --quiet; then
   echo "ERROR: Failed to map www.${DOMAIN}. Check the error above."
-  exit 1
+  return 2>/dev/null || true
 fi
 
 echo ""

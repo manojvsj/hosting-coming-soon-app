@@ -11,12 +11,23 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 source "${SCRIPT_DIR}/.env"
 
 if [[ -z "${SUBDOMAIN}" ]]; then
-  echo "Error: SUBDOMAIN is required. Example: SUBDOMAIN=dev ./map-subdomain.sh"
-  exit 1
+  echo "Error: SUBDOMAIN is required. Set it in .env (e.g. SUBDOMAIN=dev)"
+  return 2>/dev/null || true
 fi
 
 FULL_DOMAIN="${SUBDOMAIN}.${DOMAIN}"
 
+# Step 1: Check parent domain is verified
+echo "==> Checking if ${DOMAIN} is verified..."
+if ! gcloud domains list-user-verified --project ${PROJECT_ID} 2>/dev/null | grep -q "${DOMAIN}"; then
+  echo "ERROR: ${DOMAIN} is not verified. Run this first:"
+  echo "  gcloud domains verify ${DOMAIN}"
+  return 2>/dev/null || true
+fi
+echo "==> ✓ ${DOMAIN} is verified"
+echo ""
+
+# Step 2: Create subdomain mapping
 echo "==> Mapping ${FULL_DOMAIN} to ${SERVICE}"
 if ! gcloud beta run domain-mappings create \
   --service ${SERVICE} \
@@ -25,17 +36,15 @@ if ! gcloud beta run domain-mappings create \
   --project ${PROJECT_ID} \
   --quiet; then
   echo "ERROR: Failed to map ${FULL_DOMAIN}. Check the error above."
-  exit 1
+  return 2>/dev/null || true
 fi
 
 echo ""
-echo "==> Add this DNS record at your domain registrar:"
-gcloud beta run domain-mappings describe \
-  --domain ${FULL_DOMAIN} \
-  --region ${REGION} \
-  --project ${PROJECT_ID} \
-  --format='table(resourceRecords.type, resourceRecords.rrdata)'
-
+echo "==> Done! Add this DNS record at your domain registrar:"
 echo ""
-echo "==> Subdomain: add a CNAME record for ${FULL_DOMAIN} pointing to ghs.googlehosted.com."
+echo "  Type:  CNAME"
+echo "  Name:  ${SUBDOMAIN}"
+echo "  Value: ghs.googlehosted.com."
+echo "  TTL:   1 Hour (or 3600)"
+echo ""
 echo "==> Once DNS propagates, verify with: ./verify-domain.sh"
