@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 # Maps a subdomain (e.g. dev.datapalli.io) to a Cloud Run service.
 # For apex domains, use ./map-domain.sh instead.
@@ -19,12 +18,15 @@ fi
 FULL_DOMAIN="${SUBDOMAIN}.${DOMAIN}"
 
 echo "==> Mapping ${FULL_DOMAIN} to ${SERVICE}"
-gcloud beta run domain-mappings create \
+if ! gcloud beta run domain-mappings create \
   --service ${SERVICE} \
   --domain ${FULL_DOMAIN} \
   --region ${REGION} \
   --project ${PROJECT_ID} \
-  --quiet
+  --quiet; then
+  echo "ERROR: Failed to map ${FULL_DOMAIN}. Check the error above."
+  exit 1
+fi
 
 echo ""
 echo "==> Add this DNS record at your domain registrar:"
