@@ -116,8 +116,9 @@ coming-soon-app/
 ├── Dockerfile               # Multi-stage Docker build
 ├── gcloud-setup.sh          # Step 1: One-time GCP setup
 ├── cloud-run-deploy.sh      # Step 2: Build & deploy
-├── map-domain.sh            # Step 3: Custom domain mapping
-├── verify-domain.sh         # Check domain & SSL status
+├── map-domain.sh            # Step 3a: Apex domain mapping (yourdomain.com + www)
+├── map-subdomain.sh         # Step 3b: Subdomain mapping (e.g. dev.yourdomain.com)
+├── verify-domain.sh         # Check domain/subdomain & SSL status
 ├── local-docker.sh          # Local Docker testing
 ├── README.md                # This file
 └── .github/
@@ -204,6 +205,7 @@ export REPO=your-artifact-repo
 export IMAGE=your-image-name
 export SERVICE=your-cloud-run-service
 export DOMAIN=yourdomain.com
+export SUBDOMAIN=dev              # For subdomain mapping (e.g. dev.yourdomain.com)
 ```
 
 > The `.env` file is git-ignored — it will never be committed.
@@ -242,19 +244,46 @@ This enables APIs and creates the Artifact Registry repo. Safe to re-run (skips 
 
 Builds the image via Cloud Build and deploys to Cloud Run. Prints the service URL on completion.
 
-### Step 3 — Map Custom Domain (one-time)
+### Step 3a — Verify Domain Ownership (required before mapping)
+
+```bash
+gcloud domains verify yourdomain.com
+```
+
+This opens a browser to verify ownership via [Google Search Console](https://search.google.com/search-console). You only need to verify the **parent domain** once — all subdomains are covered automatically.
+
+Confirm it worked:
+
+```bash
+source .env
+gcloud domains list-user-verified --project ${PROJECT_ID}
+```
+
+### Step 3b — Map Apex Domain (one-time)
 
 ```bash
 ./map-domain.sh
 ```
 
-Maps your root domain and `www` subdomain. Prints the DNS records you need to add at your registrar.
+Maps your root domain (`yourdomain.com`) and `www`. Prints A/AAAA DNS records to add at your registrar.
+
+### Step 3c — Map Subdomain (one-time per subdomain)
+
+Set `SUBDOMAIN` in `.env` (e.g. `dev`, `staging`), then:
+
+```bash
+./map-subdomain.sh
+```
+
+Maps `${SUBDOMAIN}.${DOMAIN}` to your Cloud Run service. Prints the CNAME record to add at your registrar.
 
 ### Verify Domain & SSL
 
 ```bash
 ./verify-domain.sh
 ```
+
+Checks the subdomain if `SUBDOMAIN` is set in `.env`, otherwise checks the apex domain.
 
 > **Re-deploying after code changes?** Just run `./cloud-run-deploy.sh` again — that's it.
 
@@ -332,6 +361,14 @@ Go to **GoDaddy** → **My Products** → your domain → **DNS Management**
 | Type | Name | Value | TTL |
 |------|------|-------|-----|
 | CNAME | `www` | `ghs.googlehosted.com` | 600 |
+
+#### CNAME Record (Custom Subdomain, e.g. dev)
+
+| Type | Name | Value | TTL |
+|------|------|-------|-----|
+| CNAME | `dev` | `ghs.googlehosted.com` | 3600 |
+
+> For subdomains, you only need **one CNAME** — no A/AAAA records required.
 
 ### 5.4 — How the Domain Connection Works
 
